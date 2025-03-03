@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # ✅ Add this
 import csv
 import os
 
 app = Flask(__name__)
+CORS(app)  # ✅ Enable CORS for all routes
 
 BCRM_FILE = "bcrm.csv"
 USED_FILE = "used_meters.csv"
@@ -46,4 +48,4 @@ def register_meter():
     return jsonify({"status": "success", "message": "Meter registered."})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=10000, debug=True)  # ✅ Make sure it's accessible on Render
