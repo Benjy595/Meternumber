@@ -3,39 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meter Checker</title>
+    <title>Meter Number Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
+
     <h2>Meter Number Checker</h2>
-    <input type="text" id="meterInput" placeholder="Enter Meter Number">
-    <button onclick="checkMeter()">Check</button>
-    <p id="result"></p>
-    <button id="registerBtn" onclick="registerMeter()" style="display: none;">Register as Used</button>
+
+    <input type="text" id="meterNumber" placeholder="Enter Meter Number">
+    <button onclick="checkMeter()">Check Meter</button>
+    <button onclick="registerMeter()">Register Meter</button>
+
+    <div id="result"></div>
 
     <script>
-        const BASE_URL = "https://meter-checker.onrender.com";  // Change to your backend URL
+        const API_URL = "https://meternumber-1.onrender.com";
 
         async function checkMeter() {
-            const meterNumber = document.getElementById("meterInput").value;
-            const response = await fetch(`${BASE_URL}/check_meter?meter_number=${meterNumber}`);
+            const meter = document.getElementById("meterNumber").value;
+            if (!meter) {
+                alert("Please enter a meter number.");
+                return;
+            }
+
+            const response = await fetch(`${API_URL}/check?meter=${meter}`);
             const data = await response.json();
 
-            const resultText = data.exists ? "Meter exists in BCRM." : "Meter NOT in BCRM.";
-            document.getElementById("result").innerText = resultText;
-            
-            document.getElementById("registerBtn").style.display = "block";
+            document.getElementById("result").innerText = data.message;
         }
 
         async function registerMeter() {
-            const meterNumber = document.getElementById("meterInput").value;
-            await fetch(`${BASE_URL}/register_meter`, {
+            const meter = document.getElementById("meterNumber").value;
+            if (!meter) {
+                alert("Please enter a meter number.");
+                return;
+            }
+
+            const response = await fetch(`${API_URL}/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ meter_number: meterNumber })
+                body: JSON.stringify({ meter: meter })
             });
 
-            alert("Meter registered successfully!");
+            const data = await response.json();
+            document.getElementById("result").innerText = data.message;
         }
     </script>
+
 </body>
 </html>
