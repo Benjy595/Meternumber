@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meter Checker</title>
+</head>
+<body>
+    <h2>Meter Number Checker</h2>
+    <input type="text" id="meterInput" placeholder="Enter Meter Number">
+    <button onclick="checkMeter()">Check</button>
+    <p id="result"></p>
+    <button id="registerBtn" onclick="registerMeter()" style="display: none;">Register as Used</button>
+
+    <script>
+        const BASE_URL = "https://meter-checker.onrender.com";  // Change to your backend URL
+
+        async function checkMeter() {
+            const meterNumber = document.getElementById("meterInput").value;
+            const response = await fetch(`${BASE_URL}/check_meter?meter_number=${meterNumber}`);
+            const data = await response.json();
+
+            const resultText = data.exists ? "Meter exists in BCRM." : "Meter NOT in BCRM.";
+            document.getElementById("result").innerText = resultText;
+            
+            document.getElementById("registerBtn").style.display = "block";
+        }
+
+        async function registerMeter() {
+            const meterNumber = document.getElementById("meterInput").value;
+            await fetch(`${BASE_URL}/register_meter`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ meter_number: meterNumber })
+            });
+
+            alert("Meter registered successfully!");
+        }
+    </script>
+</body>
+</html>
