@@ -35,33 +35,46 @@
         const API_URL = "https://meternumber-1.onrender.com";
 
         async function checkMeter() {
-            const meter = document.getElementById("meterNumber").value;
+            const meter = document.getElementById("meterNumber").value.trim();
             if (!meter) {
                 alert("Please enter a meter number.");
                 return;
             }
 
-            const response = await fetch(`${API_URL}/check?meter=${meter}`);
-            const data = await response.json();
-
-            document.getElementById("result").innerText = data.message;
+            try {
+                const response = await fetch(`${API_URL}/check_meter?meter_number=${meter}`);
+                if (!response.ok) throw new Error("Failed to fetch");
+                
+                const data = await response.json();
+                document.getElementById("result").innerText = data.exists ? "Meter exists in BCRM." : "Meter does not exist.";
+            } catch (error) {
+                document.getElementById("result").innerText = "Error checking meter!";
+                console.error("Error:", error);
+            }
         }
 
         async function registerMeter() {
-            const meter = document.getElementById("meterNumber").value;
+            const meter = document.getElementById("meterNumber").value.trim();
             if (!meter) {
                 alert("Please enter a meter number.");
                 return;
             }
 
-            const response = await fetch(`${API_URL}/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ meter: meter })
-            });
-
-            const data = await response.json();
-            document.getElementById("result").innerText = data.message;
+            try {
+                const response = await fetch(`${API_URL}/register_meter`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ meter_number: meter })
+                });
+                
+                if (!response.ok) throw new Error("Failed to register meter");
+                
+                const data = await response.json();
+                document.getElementById("result").innerText = data.message;
+            } catch (error) {
+                document.getElementById("result").innerText = "Error registering meter!";
+                console.error("Error:", error);
+            }
         }
     </script>
 
