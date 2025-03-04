@@ -1,28 +1,31 @@
 import sqlite3
 import csv
 
-# Connect to SQLite database (or create it if it doesn't exist)
-conn = sqlite3.connect("meters.db")
+DB_FILE = "meters.db"  # SQLite database file
+CSV_FILE = "bcrm.csv"  # Your CSV file
+
+# Connect to SQLite (creates the file if it doesn't exist)
+conn = sqlite3.connect(DB_FILE)
 cursor = conn.cursor()
 
-# Create table if not exists
+# Create table (modify column names if needed)
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS bcrm_meters (
         meter_number TEXT PRIMARY KEY
     )
 """)
 
-# Open and read CSV file
-with open("bcrm.csv", "r", newline="", encoding="utf-8") as csvfile:
-    csv_reader = csv.reader(csvfile)
-    next(csv_reader)  # Skip header if CSV has one
+# Read CSV and insert data into SQLite
+with open(CSV_FILE, "r", newline="") as file:
+    reader = csv.reader(file)
+    next(reader, None)  # Skip header if exists
+    for row in reader:
+        try:
+            cursor.execute("INSERT INTO bcrm_meters (meter_number) VALUES (?)", (row[0],))
+        except sqlite3.IntegrityError:
+            pass  # Ignore duplicates
 
-    for row in csv_reader:
-        meter_number = row[0].strip()  # Adjust if meter number is in a different column
-        cursor.execute("INSERT OR IGNORE INTO bcrm_meters (meter_number) VALUES (?)", (meter_number,))
-
-# Commit and close connection
 conn.commit()
 conn.close()
 
-print("CSV data imported successfully!")
+print("CSV data imported into SQLite successfully!")
