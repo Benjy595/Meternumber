@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meter Number Checker</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,11 +30,14 @@
             font-weight: bold;
         }
         #map {
-            width: 100%;
             height: 400px;
+            width: 100%;
             margin-top: 20px;
         }
     </style>
+    <!-- Leaflet.js for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -54,19 +56,16 @@
 
     <div id="result"></div>
 
-    <!-- ✅ Map Container -->
+    <!-- Map Container -->
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         const API_URL = "https://meternumber-1.onrender.com";
 
         // Initialize Leaflet Map
-        const map = L.map('map').setView([3.1390, 101.6869], 10); // Default: Kuala Lumpur
-
-        // Add OpenStreetMap Tile Layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
+        let map = L.map("map").setView([3.139, 101.686], 10); // Default view: Kuala Lumpur
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors"
         }).addTo(map);
 
         let marker;
@@ -83,21 +82,10 @@
                 if (!response.ok) throw new Error("Failed to fetch");
 
                 const data = await response.json();
+
                 if (data.exists) {
                     document.getElementById("result").innerText = "Meter exists in BCRM.";
-
-                    if (data.latitude && data.longitude) {
-                        const lat = parseFloat(data.latitude);
-                        const lon = parseFloat(data.longitude);
-
-                        // ✅ Pan to location
-                        map.setView([lat, lon], 15);
-
-                        // ✅ Add marker
-                        if (marker) map.removeLayer(marker);
-                        marker = L.marker([lat, lon]).addTo(map)
-                            .bindPopup(`Meter Number: ${meter}`).openPopup();
-                    }
+                    updateMap(data.latitude, data.longitude);
                 } else {
                     document.getElementById("result").innerText = "Meter does not exist.";
                 }
@@ -141,6 +129,14 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+        }
+
+        function updateMap(lat, lon) {
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            marker = L.marker([lat, lon]).addTo(map);
+            map.setView([lat, lon], 15); // Pan & zoom to the location
         }
     </script>
 
