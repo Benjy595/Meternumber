@@ -20,12 +20,19 @@ def load_bcrm_meters():
     try:
         with open(BCRM_FILE, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
+            print("Reading bcrm.csv...")  # Debugging line
             for row in reader:
+                print(f"Raw row: {row}")  # Debugging line
+                
                 row = {k.strip(): v.strip() for k, v in row.items()}  # Remove extra spaces
                 if row.get("meter_number") and row.get("latitude") and row.get("longitude"):
                     meters[row["meter_number"]] = (row["latitude"], row["longitude"])
+                else:
+                    print(f"Skipping invalid row: {row}")  # Debugging line
     except Exception as e:
         print(f"Error reading {BCRM_FILE}: {e}")
+
+    print(f"Loaded {len(meters)} meters.")  # Debugging line
     return meters
 
 @app.route("/check_meter", methods=["GET"])
