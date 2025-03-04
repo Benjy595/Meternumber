@@ -10,6 +10,16 @@
             text-align: center;
             margin: 20px;
         }
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+        .logo-container img {
+            height: 60px;
+        }
         input, button {
             padding: 10px;
             margin: 10px;
@@ -19,24 +29,21 @@
             margin-top: 20px;
             font-weight: bold;
         }
-        img {
-            max-width: 200px; /* Adjust size */
-            height: auto;
-            margin-bottom: 20px;
-        }
     </style>
 </head>
 <body>
 
-    <!-- ✅ Add the Tenaga Nasional logo -->
-    <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Tenaga_Nasional.svg" alt="Tenaga Nasional Logo">
+    <!-- ✅ Logos -->
+    <div class="logo-container">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Tenaga_Nasional.svg" alt="TNB Logo">
+        <img src="https://media.licdn.com/dms/image/v2/C4D0BAQFWMFqnTvA6Hw/company-logo_200_200/company-logo_200_200/0/1631327918203?e=2147483647&v=beta&t=87nzKM1sv0Bbvu8QtTncKGIleWcS5XXc61NuBaWROUQ" alt="Company Logo">
+    </div>
 
     <h2>Meter Number Checker</h2>
 
     <input type="text" id="meterNumber" placeholder="Enter Meter Number">
     <button onclick="checkMeter()">Check Meter</button>
     <button onclick="registerMeter()">Register Meter</button>
-    
     <button onclick="downloadCSV()">Download Meters</button>
 
     <div id="result"></div>
