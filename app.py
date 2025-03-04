@@ -9,23 +9,33 @@ CORS(app)
 BCRM_FILE = "bcrm.csv"
 USED_METERS_FILE = "used_meters.csv"
 
-# Ensure used meters file exists
+# Ensure used meters file exists with a header
 if not os.path.exists(USED_METERS_FILE):
     with open(USED_METERS_FILE, "w") as f:
-        f.write("meter_number,in_bcrm\n")  # CSV header
+        f.write("meter_number,in_bcrm\n")
 
 def load_bcrm_meters():
-    """Load all meter numbers from bcrm.csv"""
-    with open(BCRM_FILE, "r") as f:
-        reader = csv.reader(f)
-        next(reader, None)  # Skip header
-        return {row[0] for row in reader}  # Store as a set for fast lookup
+    """Load meter numbers along with latitude & longitude from bcrm.csv"""
+    meters = {}
+    try:
+        with open(BCRM_FILE, "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                meters[row["meter_number"]] = (row["latitude"], row["longitude"])
+    except Exception as e:
+        print(f"Error reading {BCRM_FILE}: {e}")
+    return meters
 
 @app.route("/check_meter", methods=["GET"])
 def check_meter():
     meter_number = request.args.get("meter_number")
     meters = load_bcrm_meters()
-    return jsonify({"exists": meter_number in meters})
+    
+    if meter_number in meters:
+        lat, lon = meters[meter_number]
+        return jsonify({"exists": True, "latitude": lat, "longitude": lon})
+    
+    return jsonify({"exists": False})
 
 @app.route("/register_meter", methods=["POST"])
 def register_meter():
