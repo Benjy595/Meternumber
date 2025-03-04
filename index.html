@@ -19,9 +19,17 @@
             margin-top: 20px;
             font-weight: bold;
         }
+        img {
+            max-width: 200px; /* Adjust size */
+            height: auto;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
+
+    <!-- ✅ Add the Tenaga Nasional logo -->
+    <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Tenaga_Nasional.svg" alt="Tenaga Nasional Logo">
 
     <h2>Meter Number Checker</h2>
 
@@ -29,7 +37,6 @@
     <button onclick="checkMeter()">Check Meter</button>
     <button onclick="registerMeter()">Register Meter</button>
     
-    <!-- ✅ Add the new button here -->
     <button onclick="downloadCSV()">Download Meters</button>
 
     <div id="result"></div>
