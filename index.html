@@ -28,6 +28,9 @@
     <input type="text" id="meterNumber" placeholder="Enter Meter Number">
     <button onclick="checkMeter()">Check Meter</button>
     <button onclick="registerMeter()">Register Meter</button>
+    
+    <!-- ✅ Add the new button here -->
+    <button onclick="downloadCSV()">Download Meters</button>
 
     <div id="result"></div>
 
@@ -75,6 +78,18 @@
                 document.getElementById("result").innerText = "Error registering meter!";
                 console.error("Error:", error);
             }
+        }
+
+        async function downloadCSV() {
+            const response = await fetch(`${API_URL}/download_meters`);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "meters.csv";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     </script>
 
