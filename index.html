@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meter Number Checker</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -29,6 +30,11 @@
             margin-top: 20px;
             font-weight: bold;
         }
+        #map {
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -48,8 +54,22 @@
 
     <div id="result"></div>
 
+    <!-- ✅ Map Container -->
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         const API_URL = "https://meternumber-1.onrender.com";
+
+        // Initialize Leaflet Map
+        const map = L.map('map').setView([3.1390, 101.6869], 10); // Default: Kuala Lumpur
+
+        // Add OpenStreetMap Tile Layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        let marker;
 
         async function checkMeter() {
             const meter = document.getElementById("meterNumber").value.trim();
@@ -61,9 +81,26 @@
             try {
                 const response = await fetch(`${API_URL}/check_meter?meter_number=${meter}`);
                 if (!response.ok) throw new Error("Failed to fetch");
-                
+
                 const data = await response.json();
-                document.getElementById("result").innerText = data.exists ? "Meter exists in BCRM." : "Meter does not exist.";
+                if (data.exists) {
+                    document.getElementById("result").innerText = "Meter exists in BCRM.";
+
+                    if (data.latitude && data.longitude) {
+                        const lat = parseFloat(data.latitude);
+                        const lon = parseFloat(data.longitude);
+
+                        // ✅ Pan to location
+                        map.setView([lat, lon], 15);
+
+                        // ✅ Add marker
+                        if (marker) map.removeLayer(marker);
+                        marker = L.marker([lat, lon]).addTo(map)
+                            .bindPopup(`Meter Number: ${meter}`).openPopup();
+                    }
+                } else {
+                    document.getElementById("result").innerText = "Meter does not exist.";
+                }
             } catch (error) {
                 document.getElementById("result").innerText = "Error checking meter!";
                 console.error("Error:", error);
@@ -83,9 +120,9 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ meter_number: meter })
                 });
-                
+
                 if (!response.ok) throw new Error("Failed to register meter");
-                
+
                 const data = await response.json();
                 document.getElementById("result").innerText = data.message;
             } catch (error) {
