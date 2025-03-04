@@ -1,72 +1,48 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-import sqlite3
-import os
 import csv
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-DB_FILE = "meters.db"
+BCRM_FILE = "bcrm.csv"
+USED_METERS_FILE = "used_meters.csv"
 
-def init_db():
-    with sqlite3.connect(DB_FILE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS bcrm_meters (
-                meter_number TEXT PRIMARY KEY
-            )
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS used_meters (
-                meter_number TEXT PRIMARY KEY,
-                in_bcrm BOOLEAN
-            )
-        """)
-        conn.commit()
+# Ensure used meters file exists
+if not os.path.exists(USED_METERS_FILE):
+    with open(USED_METERS_FILE, "w") as f:
+        f.write("meter_number,in_bcrm\n")  # CSV header
+
+def load_bcrm_meters():
+    """Load all meter numbers from bcrm.csv"""
+    with open(BCRM_FILE, "r") as f:
+        reader = csv.reader(f)
+        next(reader, None)  # Skip header
+        return {row[0] for row in reader}  # Store as a set for fast lookup
 
 @app.route("/check_meter", methods=["GET"])
 def check_meter():
     meter_number = request.args.get("meter_number")
-    with sqlite3.connect(DB_FILE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1 FROM bcrm_meters WHERE meter_number = ?", (meter_number,))
-        exists = cursor.fetchone() is not None
-    return jsonify({"exists": exists})
+    meters = load_bcrm_meters()
+    return jsonify({"exists": meter_number in meters})
 
 @app.route("/register_meter", methods=["POST"])
 def register_meter():
     data = request.json
     meter_number = data.get("meter_number")
+    meters = load_bcrm_meters()
+    in_bcrm = meter_number in meters
 
-    with sqlite3.connect(DB_FILE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1 FROM bcrm_meters WHERE meter_number = ?", (meter_number,))
-        in_bcrm = cursor.fetchone() is not None
-
-        # Avoid duplicate registrations
-        cursor.execute("INSERT OR IGNORE INTO used_meters (meter_number, in_bcrm) VALUES (?, ?)", (meter_number, in_bcrm))
-        conn.commit()
+    # Append to used_meters.csv
+    with open(USED_METERS_FILE, "a") as f:
+        f.write(f"{meter_number},{in_bcrm}\n")
 
     return jsonify({"status": "success", "message": "Meter registered."})
 
 @app.route("/download_meters", methods=["GET"])
 def download_meters():
-    csv_path = "used_meters.csv"
-
-    with sqlite3.connect(DB_FILE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT meter_number, in_bcrm FROM used_meters")
-        rows = cursor.fetchall()
-
-    # Ensure proper CSV formatting
-    with open(csv_path, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["Meter Number", "In BCRM"])
-        writer.writerows(rows)
-
-    return send_file(csv_path, as_attachment=True)
+    return send_file(USED_METERS_FILE, as_attachment=True)
 
 if __name__ == "__main__":
-    init_db()
     app.run(host="0.0.0.0", port=10000, debug=True)
