@@ -1,70 +1,65 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import sqlite3
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-DB_FILE = "meters.db"  # ✅ SQLite database file
+DB_FILE = "meters.db"
 
-# ✅ Initialize the database
 def init_db():
     with sqlite3.connect(DB_FILE) as conn:
-        cur = conn.cursor()
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS meters (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                meter_number TEXT UNIQUE NOT NULL,
-                exists_in_bcrm BOOLEAN NOT NULL
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS bcrm_meters (
+                meter_number TEXT PRIMARY KEY
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS used_meters (
+                meter_number TEXT PRIMARY KEY,
+                in_bcrm BOOLEAN
             )
         """)
         conn.commit()
 
-init_db()  # ✅ Create table if it doesn't exist
-
-# ✅ Check if meter exists in the database
 @app.route("/check_meter", methods=["GET"])
 def check_meter():
     meter_number = request.args.get("meter_number")
     with sqlite3.connect(DB_FILE) as conn:
-        cur = conn.cursor()
-        cur.execute("SELECT exists_in_bcrm FROM meters WHERE meter_number = ?", (meter_number,))
-        row = cur.fetchone()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM bcrm_meters WHERE meter_number = ?", (meter_number,))
+        exists = cursor.fetchone() is not None
+    return jsonify({"exists": exists})
 
-    return jsonify({"exists": bool(row[0]) if row else False})
-
-# ✅ Register a new meter number
 @app.route("/register_meter", methods=["POST"])
 def register_meter():
     data = request.json
     meter_number = data.get("meter_number")
-    exists_in_bcrm = data.get("exists_in_bcrm", False)  # Default: Not in BCRM
-
     with sqlite3.connect(DB_FILE) as conn:
-        cur = conn.cursor()
-        try:
-            cur.execute("INSERT INTO meters (meter_number, exists_in_bcrm) VALUES (?, ?)", 
-                        (meter_number, exists_in_bcrm))
-            conn.commit()
-            return jsonify({"status": "success", "message": "Meter registered."})
-        except sqlite3.IntegrityError:
-            return jsonify({"status": "error", "message": "Meter already registered!"}), 400
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM bcrm_meters WHERE meter_number = ?", (meter_number,))
+        in_bcrm = cursor.fetchone() is not None
+        cursor.execute("INSERT INTO used_meters (meter_number, in_bcrm) VALUES (?, ?)", (meter_number, in_bcrm))
+        conn.commit()
+    return jsonify({"status": "success", "message": "Meter registered."})
 
-# ✅ Get all registered meters (for download)
 @app.route("/download_meters", methods=["GET"])
 def download_meters():
     with sqlite3.connect(DB_FILE) as conn:
-        cur = conn.cursor()
-        cur.execute("SELECT meter_number, exists_in_bcrm FROM meters")
-        meters = cur.fetchall()
-
-    csv_data = "Meter Number,Exists in BCRM\n"
-    csv_data += "\n".join([f"{m[0]},{'Yes' if m[1] else 'No'}" for m in meters])
-
-    return csv_data, 200, {
-        "Content-Type": "text/csv",
-        "Content-Disposition": "attachment; filename=meters.csv"
-    }
+        cursor = conn.cursor()
+        cursor.execute("SELECT meter_number, in_bcrm FROM used_meters")
+        rows = cursor.fetchall()
+    
+    csv_path = "used_meters.csv"
+    with open(csv_path, "w") as f:
+        f.write("Meter Number,In BCRM\n")
+        for row in rows:
+            f.write(f"{row[0]},{row[1]}\n")
+    
+    return send_file(csv_path, as_attachment=True)
 
 if __name__ == "__main__":
+    init_db()
     app.run(host="0.0.0.0", port=10000, debug=True)
