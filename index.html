@@ -4,11 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meter Number Checker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             text-align: center;
             margin: 20px;
+            text-transform: uppercase;
+            background-image: url('abstract-background-with-low-poly-design.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
         }
         .logo-container {
             display: flex;
@@ -20,10 +26,33 @@
         .logo-container img {
             height: 60px;
         }
-        input, button {
-            padding: 10px;
+        h2 {
+            text-transform: uppercase;
+        }
+        .button-container {
+            position: relative;
+            margin-top: 20px;
+            display: inline-block;
+            padding: 20px;
+            background-color: #007bff;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .button-container button {
+            padding: 10px 20px;
             margin: 10px;
             font-size: 16px;
+            color: white;
+            background-color: transparent;
+            border: 2px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border 0.3s ease;
+        }
+        .button-container button:hover {
+            background-color: white;
+            color: #007bff;
+            border: 2px solid #007bff;
         }
         #result {
             margin-top: 20px;
@@ -39,12 +68,16 @@
         <img src="https://media.licdn.com/dms/image/v2/C4D0BAQFWMFqnTvA6Hw/company-logo_200_200/company-logo_200_200/0/1631327918203?e=2147483647&v=beta&t=87nzKM1sv0Bbvu8QtTncKGIleWcS5XXc61NuBaWROUQ" alt="Company Logo">
     </div>
 
-    <h2>Meter Number Checker</h2>
+    <h2>METER NUMBER CHECKER</h2>
 
-    <input type="text" id="meterNumber" placeholder="Enter Meter Number">
-    <button onclick="checkMeter()">Check Meter</button>
-    <button onclick="registerMeter()">Register Meter</button>
-    <button onclick="downloadCSV()">Download Meters</button>
+    <input type="text" id="meterNumber" placeholder="ENTER METER NUMBER">
+    
+    <!-- Button Container with Floating Effect -->
+    <div class="button-container">
+        <button onclick="checkMeter()">CHECK METER</button>
+        <button onclick="registerMeter()">REGISTER METER</button>
+        <button onclick="downloadCSV()">DOWNLOAD METERS</button>
+    </div>
 
     <div id="result"></div>
 
@@ -63,9 +96,9 @@
                 if (!response.ok) throw new Error("Failed to fetch");
                 
                 const data = await response.json();
-                document.getElementById("result").innerText = data.exists ? "Meter exists in BCRM." : "Meter does not exist.";
+                document.getElementById("result").innerText = data.exists ? "METER EXISTS IN BCRM." : "METER DOES NOT EXIST.";
             } catch (error) {
-                document.getElementById("result").innerText = "Error checking meter!";
+                document.getElementById("result").innerText = "ERROR CHECKING METER!";
                 console.error("Error:", error);
             }
         }
@@ -89,7 +122,7 @@
                 const data = await response.json();
                 document.getElementById("result").innerText = data.message;
             } catch (error) {
-                document.getElementById("result").innerText = "Error registering meter!";
+                document.getElementById("result").innerText = "ERROR REGISTERING METER!";
                 console.error("Error:", error);
             }
         }
