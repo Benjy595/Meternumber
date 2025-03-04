@@ -21,14 +21,20 @@ def load_bcrm_meters():
         with open(BCRM_FILE, "r") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                meters[row["meter_number"]] = (row["latitude"], row["longitude"])
+                if "meter_number" in row and "latitude" in row and "longitude" in row:
+                    meters[row["meter_number"].strip()] = (row["latitude"].strip(), row["longitude"].strip())
     except Exception as e:
         print(f"Error reading {BCRM_FILE}: {e}")
+    print("Loaded meters:", meters)  # Debugging print
     return meters
 
 @app.route("/check_meter", methods=["GET"])
 def check_meter():
-    meter_number = request.args.get("meter_number")
+    meter_number = request.args.get("meter_number", "").strip()
+    
+    if not meter_number:
+        return jsonify({"error": "No meter number provided"}), 400
+    
     meters = load_bcrm_meters()
     
     if meter_number in meters:
@@ -40,7 +46,11 @@ def check_meter():
 @app.route("/register_meter", methods=["POST"])
 def register_meter():
     data = request.json
-    meter_number = data.get("meter_number")
+    meter_number = data.get("meter_number", "").strip()
+
+    if not meter_number:
+        return jsonify({"error": "No meter number provided"}), 400
+    
     meters = load_bcrm_meters()
     in_bcrm = meter_number in meters
 
