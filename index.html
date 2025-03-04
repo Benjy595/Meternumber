@@ -29,15 +29,7 @@
             margin-top: 20px;
             font-weight: bold;
         }
-        #map {
-            height: 400px;
-            width: 100%;
-            margin-top: 20px;
-        }
     </style>
-    <!-- Leaflet.js for Maps -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -56,19 +48,8 @@
 
     <div id="result"></div>
 
-    <!-- Map Container -->
-    <div id="map"></div>
-
     <script>
         const API_URL = "https://meternumber-1.onrender.com";
-
-        // Initialize Leaflet Map
-        let map = L.map("map").setView([3.139, 101.686], 10); // Default view: Kuala Lumpur
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "© OpenStreetMap contributors"
-        }).addTo(map);
-
-        let marker;
 
         async function checkMeter() {
             const meter = document.getElementById("meterNumber").value.trim();
@@ -80,15 +61,9 @@
             try {
                 const response = await fetch(`${API_URL}/check_meter?meter_number=${meter}`);
                 if (!response.ok) throw new Error("Failed to fetch");
-
+                
                 const data = await response.json();
-
-                if (data.exists) {
-                    document.getElementById("result").innerText = "Meter exists in BCRM.";
-                    updateMap(data.latitude, data.longitude);
-                } else {
-                    document.getElementById("result").innerText = "Meter does not exist.";
-                }
+                document.getElementById("result").innerText = data.exists ? "Meter exists in BCRM." : "Meter does not exist.";
             } catch (error) {
                 document.getElementById("result").innerText = "Error checking meter!";
                 console.error("Error:", error);
@@ -108,9 +83,9 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ meter_number: meter })
                 });
-
+                
                 if (!response.ok) throw new Error("Failed to register meter");
-
+                
                 const data = await response.json();
                 document.getElementById("result").innerText = data.message;
             } catch (error) {
@@ -129,14 +104,6 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-        }
-
-        function updateMap(lat, lon) {
-            if (marker) {
-                map.removeLayer(marker);
-            }
-            marker = L.marker([lat, lon]).addTo(map);
-            map.setView([lat, lon], 15); // Pan & zoom to the location
         }
     </script>
 
